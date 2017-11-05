@@ -6,6 +6,7 @@ import java.util.*;
 
 /**
  * @Author: xun007
+ * @Team: rni006
  */
 public class PrintTree {
 
@@ -16,62 +17,54 @@ public class PrintTree {
         String inputContent = new In(inputFile).readAll();
         StdOut.println(formatStringToTree(inputContent));
     }
-
+    //formats string input to tree
     public static String formatStringToTree(String inputContent) {
-        //TODO: put unnecessary splitting in other methods
         StringBuilder outputContent = new StringBuilder();
-        String[] splittedFileInput = inputContent.split("\n");
-        int itemsInTotal = Integer.parseInt(splittedFileInput[0]);
-        String[] splittedItems = splittedFileInput[1].split("\\s");
-        String[] itemList = new String[splittedFileInput.length - 2];
+        String[] splitted = inputContent.split("\n");
+        int amount = Integer.parseInt(splitted[0]);
 
-        if (itemsInTotal < 2) {
-            StdOut.println("'-" + splittedItems[0] + "  ");
-            System.exit(0);
-        }
+        Node root =  new Node(null);
+        root.setId("'-root");
+        String[] files = Arrays.copyOfRange(splitted, 2, splitted.length);
+        String[] splittedItems = splitted[1].split("\\s");
+        for(int i = 0; i < amount ; i++){
 
-        int k = 0;
-        for (int i = 2; i < itemsInTotal - 1; i++) {
-            itemList[k] = splittedFileInput[i].substring(4);
-            k++;
-        }
 
-        int folderAmount = itemList.length - 1; //Because we do not count root as folder
-
-        Node treeRootNode = new Node(null);
-        treeRootNode.setId("'-" + splittedItems[0]);
-        Node childNode = new Node(null);
-
-        String[] folderSplit = itemList[0].split("\\s");
-        int rootAmount = folderSplit.length;
-
-        // For loop that adds nodes to root
-        if (folderAmount > 1) {
-            for (int i = 0; i < rootAmount; i++) {
-                int itemNumber = Integer.parseInt(folderSplit[i]);
-                childNode = addChild(treeRootNode, "'-" + splittedItems[itemNumber]);
-            }
-        }
-
-        // For loop that adds nodes to children of root
-        //TODO: fix it so "grandchildren" are present
-        int treeRootNodeCounter = treeRootNode.getChildrenCount();
-        if (folderAmount > 2) {
-            int fileCounter = 1;
-            for (int i = 0; i < treeRootNodeCounter; i++) {
-                String[] fileSplit = itemList[fileCounter].split("\\s");
-                for (int j = 0; j < fileSplit.length; j++) {
-                    int fileNumber = Integer.parseInt(fileSplit[j]);
-                    addChild(treeRootNode.getChild(i), "'-" + splittedItems[fileNumber]);
+            for(String line : files){
+                if(line.charAt(0) == Integer.toString(i).charAt(0)){
+                    String[] objectsInFile = line.split(":");
+                    String parentId = objectsInFile[0].trim();
+                    objectsInFile = objectsInFile[1].trim().split("\\s");
+                    for(String file : objectsInFile){
+                        Integer childrenId = Integer.parseInt(file);
+                        if(i == 0){
+                            addChild(root, "'-" + splittedItems[childrenId]);
+                        } else {
+                            addChild(findParent(root, splittedItems[Integer.parseInt(parentId)], new Node(null)), "'-" + splittedItems[childrenId]);
+                        }
+                    }
                 }
-                fileCounter++;
 
             }
         }
-        printTree(treeRootNode, "  ");
+
+        printTree(root, " ");
         return outputContent.toString();
     }
 
+        // Finds parent of node found from root
+    private static Node findParent(Node root, String id, Node found){
+        for(Node child: root.getChildren()){
+            if(child.getId().equals("'-"+id)){
+                return child;
+            } else {
+                found = findParent(child, id, found);
+            }
+        }
+
+        return found;
+    }
+    // Add a child to parent node
     private static Node addChild(Node parent, String id) {
         Node node = new Node(parent);
         node.setId(id);
@@ -79,8 +72,7 @@ public class PrintTree {
         return node;
     }
 
-
-    //TODO: Change it to @StringBuilder format to please the gods
+    //Method that prints tree 
     private static void printTree(Node node, String appender) {
         System.out.println(appender + node.getId());
         for (Node each : node.getChildren()) {
@@ -89,7 +81,7 @@ public class PrintTree {
 
     }
 }
-
+// @Class node
 class Node {
     private String id;
     private final List<Node> children = new ArrayList<>();
@@ -109,18 +101,6 @@ class Node {
 
     public List<Node> getChildren() {
         return children;
-    }
-
-    public Node getChild(int i) {
-        return children.get(i);
-    }
-
-    public int getChildrenCount() {
-        return children.size();
-    }
-
-    public Node getParent() {
-        return parent;
     }
 
 }
