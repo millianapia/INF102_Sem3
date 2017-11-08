@@ -1,4 +1,6 @@
 package connectingToilets;
+import edu.princeton.cs.algs4.EdgeWeightedGraph;
+import edu.princeton.cs.algs4.StdOut;
 
 import graphics.Svg;
 
@@ -35,9 +37,41 @@ public class ConnectingToilets {
     public static Set<Edge> connectToilets(Set<Toilet> toilets) {
         Set<Edge> MST = new HashSet<>();
 
-        // TODO: Solution here
-
+        Iterator<Toilet> iterator = toilets.iterator();
+        ArrayList<Toilet> toiletList = new ArrayList<>();
+        while (iterator.hasNext()) {
+            Toilet toiletA = iterator.next();
+            Toilet toiletB = closestToilet(toiletA, toilets);
+            double distance = distanceTo(toiletA.getX(), toiletA.getY(), toiletB.getX(), toiletB.getY());
+            Edge connection = new Edge(toiletA, toiletB, distance);
+            MST.add(connection);
+        }
         return MST;
+    }
+
+    public static Toilet closestToilet(Toilet toiletA, Set<Toilet> toilets) {
+        Iterator<Toilet> iterator = toilets.iterator();
+        Toilet smallestToilet = null;
+        double otherDistance = Integer.MAX_VALUE;
+        for (int i = 0; i < toilets.size(); i++) {
+            Toilet toiletB = iterator.next();
+            double distance = distanceTo(toiletA.getX(), toiletA.getY(), toiletB.getX(), toiletB.getY());
+            if (distance != 0.0) {
+                if (distance < otherDistance) {
+                    smallestToilet = toiletB;
+                    otherDistance = distance;
+
+                }
+            }
+
+
+        }
+        return smallestToilet;
+    }
+
+    public static double distanceTo(double x, double y, double otherX, double otherY) {
+        return Math.sqrt(Math.pow(x - otherX, 2) + Math.pow(y - otherY, 2));
+
     }
 
     private static Toilet lineToToilet(String line) {
