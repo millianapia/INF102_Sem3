@@ -1,5 +1,7 @@
 package connectingToilets;
+
 import edu.princeton.cs.algs4.EdgeWeightedGraph;
+import edu.princeton.cs.algs4.LazyPrimMST;
 import edu.princeton.cs.algs4.StdOut;
 
 import graphics.Svg;
@@ -36,19 +38,58 @@ public class ConnectingToilets {
 
     public static Set<Edge> connectToilets(Set<Toilet> toilets) {
         Set<Edge> MST = new HashSet<>();
-
+        List<Toilet> toiletList = new ArrayList<>();
         Iterator<Toilet> iterator = toilets.iterator();
-        ArrayList<Toilet> toiletList = new ArrayList<>();
+        toiletList.addAll(toilets);
+
+        HashMap<Toilet, Integer> toiletToInt = new HashMap<>();
+        HashMap<Integer, Toilet> intToToilet = new HashMap<>();
+
+        int counter = 0;
         while (iterator.hasNext()) {
-            Toilet toiletA = iterator.next();
-            Toilet toiletB = closestToilet(toiletA, toilets);
-            double distance = distanceTo(toiletA.getX(), toiletA.getY(), toiletB.getX(), toiletB.getY());
-            Edge connection = new Edge(toiletA, toiletB, distance);
-            MST.add(connection);
+            Toilet temp = iterator.next();
+
+            toiletToInt.put(temp, counter);
+            intToToilet.put(counter, temp);
+
+            counter++;
         }
+        Iterator<Toilet> iterator2 = toilets.iterator();
+
+        EdgeWeightedGraph G = new EdgeWeightedGraph(toilets.size(), 0);
+
+        while (iterator2.hasNext()) {
+            Toilet A = iterator2.next();
+            Toilet B = closestToilet(A, toilets);
+            double distance = distanceTo(A.getX(), A.getY(), B.getX(), B.getY());
+            int temp = toiletToInt.get(B);
+            int temp2 = toiletToInt.get(A);
+            edu.princeton.cs.algs4.Edge tempEdge = new edu.princeton.cs.algs4.Edge(temp, temp2, distance);
+            G.addEdge(tempEdge);
+
+        }
+
+
+        LazyPrimMST mst = new LazyPrimMST(G);
+
+
+        // Converting from edges in the lazyPrimMST to toilet Edges
+        for (edu.princeton.cs.algs4.Edge e : mst.edges()) {
+            StdOut.println(e.toString());
+            int v = e.either();
+            double weight = e.weight();
+            int x = e.other(e.either());
+            Toilet A = intToToilet.get(v);
+            Toilet B = intToToilet.get(x);
+            Edge temp = new Edge(A, B, weight);
+            MST.add(temp);
+        }
+
+
         return MST;
     }
 
+    // Finds the closest toilet to the toilet sent in the method
     public static Toilet closestToilet(Toilet toiletA, Set<Toilet> toilets) {
         Iterator<Toilet> iterator = toilets.iterator();
         Toilet smallestToilet = null;
@@ -69,6 +110,7 @@ public class ConnectingToilets {
         return smallestToilet;
     }
 
+    // returns the distance from one object to another with coordinates
     public static double distanceTo(double x, double y, double otherX, double otherY) {
         return Math.sqrt(Math.pow(x - otherX, 2) + Math.pow(y - otherY, 2));
 
